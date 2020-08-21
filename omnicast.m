@@ -56,7 +56,9 @@ for i = 1:m
     [tempG, ~] = ComG(chunk, tempW);
     %% DCT
     [Chunk_height, Chunk_width] = size(chunk);
+    chunk = double(chunk);
     Tempdct = mirt_dctn(chunk);
+    %Tempdct =chunk;
      mean_value(i) = mean(mean(Tempdct));
 %     standard = Tempdct- mean_value;
     Y_DCT(L(i,1) : L(i,1) + L(i,3) - 1, L(i,2) : L(i,2) + L(i,4) - 1) = Tempdct;
@@ -87,16 +89,22 @@ for snr = SNR
     %% transform into pixel domain
     for i = 1:m
         clear chunk;
+        clear chunk2;
         clear Tempidct;
         chunk = Receiver(L(i,1) : L(i,1) + L(i,3) - 1, L(i,2) : L(i,2) + L(i,4) - 1);
         chunk = chunk + mean_value(i);
         Tempidct = mirt_idctn(chunk);
+        %Tempidct = chunk;
+        chunk2 = I(L(i,1) : L(i,1) + L(i,3) - 1, L(i,2) : L(i,2) + L(i,4) - 1);
+        %% compute mse of each chunk
+        Cmse(i) = mean(mean((double(chunk2)-Tempidct).^2));
         Y2(L(i,1) : L(i,1) + L(i,3) - 1, L(i,2) : L(i,2) + L(i,4) - 1) = Tempidct;
     end
     
     %% evaluation
     Y1 = double(img_equirect);
     WPSNR = 0;
+    PSNR = 0;
     for index = 1 : maxUser
         %% load the data
         o = real(index,:);
@@ -113,6 +121,9 @@ for snr = SNR
         WMSE =sum(sum(((viewport).^2).* hvs_O))/sum(sum(sum(hvs_O)));
         % WPSNR in pixel domain
         WPSNR = WPSNR + 10*log10(255^2/WMSE)/maxUser;
+        x = find(Cmse<1000);
+        X = Cmse(x);
+        PSNR = PSNR + 10*log10(255^2/(sum(X)/length(X)))/maxUser;
     end
         Result = [Result; WPSNR];
 end

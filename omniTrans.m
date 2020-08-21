@@ -24,5 +24,11 @@ After_PAU = reshape(Receivedsignal,[m,n]);
 
 %% demodualtion
 After_DCT = After_PAU ./ g;
+%After_DCT = After_PAU;
+
+TF = isinf(After_DCT);
+After_DCT(TF) = 0;
+    
+
  end
 
